@@ -1,6 +1,13 @@
 # AI Image Captioning System
 ### CodSoft Artificial Intelligence Internship — Task 3
 
+[![Live Demo](https://img.shields.io/badge/Streamlit%20Cloud-Live%20Demo-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://codsoft-ai.streamlit.app)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/Salesforce/blip-image-captioning-base)
+
+> 🌐 **Live Web Application:** [https://codsoft-ai.streamlit.app](https://codsoft-ai.streamlit.app)
+
 An end-to-end deep learning application that combines **Computer Vision (CV)** and **Natural Language Processing (NLP)** to generate descriptive, natural-language captions for images. The project uses a pre-trained **Salesforce BLIP (Bootstrapping Language-Image Pre-training)** Vision-Language Transformer model via Hugging Face Transformers, PyTorch, and an interactive Streamlit web dashboard.
 
 ---
