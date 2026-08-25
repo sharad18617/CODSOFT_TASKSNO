@@ -18,13 +18,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Professional, modern, and uncluttered UI styling
+# Professional, modern, and mobile-responsive UI styling
 st.markdown(
     """
     <style>
     /* Global layout adjustments */
     .main .block-container {
-        padding-top: 2rem;
+        padding-top: 1.75rem;
         padding-bottom: 3rem;
         max-width: 1200px;
     }
@@ -32,8 +32,8 @@ st.markdown(
     /* Header section */
     .app-header {
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 1.5rem;
-        margin-bottom: 2rem;
+        padding-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
     }
     .app-title {
         font-size: 2.2rem;
@@ -65,7 +65,6 @@ st.markdown(
         border-radius: 6px;
         font-size: 0.8rem;
         font-weight: 500;
-        letter-spacing: 0.01em;
     }
     .tech-badge-highlight {
         display: inline-flex;
@@ -79,30 +78,12 @@ st.markdown(
         font-weight: 500;
     }
 
-    /* Content cards */
-    .panel-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.25rem;
-    }
-    .panel-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #f1f5f9;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
     /* Caption display box */
     .caption-container {
         background: #090d16;
         border: 1px solid #2563eb;
         border-radius: 10px;
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         margin-top: 1rem;
         margin-bottom: 1.25rem;
     }
@@ -112,10 +93,10 @@ st.markdown(
         letter-spacing: 0.05em;
         color: #60a5fa;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
     }
     .caption-text {
-        font-size: 1.35rem;
+        font-size: 1.3rem;
         font-weight: 600;
         color: #ffffff;
         line-height: 1.5;
@@ -124,7 +105,7 @@ st.markdown(
     /* Metric stats row */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 0.75rem;
         margin-top: 1rem;
     }
@@ -147,12 +128,25 @@ st.markdown(
         color: #e4e4e7;
     }
 
-    /* Image preview wrapper */
-    .image-preview-frame {
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid #27272a;
-        background: #09090b;
+    /* Mobile responsive optimizations */
+    @media (max-width: 768px) {
+        .app-title {
+            font-size: 1.65rem !important;
+        }
+        .app-subtitle {
+            font-size: 0.9rem !important;
+        }
+        .caption-text {
+            font-size: 1.15rem !important;
+        }
+        .main .block-container {
+            padding-top: 1rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+        .stats-grid {
+            grid-template-columns: 1fr 1fr !important;
+        }
     }
     </style>
     """,
@@ -278,17 +272,32 @@ except Exception as e:
 
 
 # ---------------------------------------------------------
-# 6. Image Upload Section
+# 6. Image Input Section (Upload File or Camera)
 # ---------------------------------------------------------
-uploaded_file = st.file_uploader(
-    "Choose an image to analyze",
-    type=["jpg", "jpeg", "png", "webp"],
-    help="Supported image formats: JPG, JPEG, PNG, WEBP",
-)
+input_tab1, input_tab2 = st.tabs(["📁 Upload Image File", "📸 Camera Capture"])
 
-if uploaded_file is not None:
+image_source = None
+image_label = ""
+
+with input_tab1:
+    uploaded_file = st.file_uploader(
+        "Choose an image from your device",
+        type=["jpg", "jpeg", "png", "webp"],
+        help="Supported formats: JPG, JPEG, PNG, WEBP",
+    )
+    if uploaded_file is not None:
+        image_source = uploaded_file
+        image_label = uploaded_file.name
+
+with input_tab2:
+    camera_photo = st.camera_input("Take a photo with your camera")
+    if camera_photo is not None:
+        image_source = camera_photo
+        image_label = "camera_snapshot.jpg"
+
+if image_source is not None:
     # Validate and load image
-    pil_image, error_msg = validate_and_load_image(uploaded_file)
+    pil_image, error_msg = validate_and_load_image(image_source)
 
     if error_msg:
         st.error(f"Image Error: {error_msg}")
@@ -298,11 +307,10 @@ if uploaded_file is not None:
 
         with col_img:
             st.markdown("#### Input Image")
-            # Using width="stretch" to comply with current Streamlit API
             st.image(
                 pil_image,
                 width="stretch",
-                caption=f"{uploaded_file.name} — {pil_image.width} × {pil_image.height} px ({pil_image.format or 'RGB'})",
+                caption=f"{image_label} — {pil_image.width} × {pil_image.height} px",
             )
 
         with col_out:
@@ -311,8 +319,9 @@ if uploaded_file is not None:
 
             generate_btn = st.button("Generate Caption", type="primary", width="stretch")
 
-            # Check if button was clicked or caption was already stored in session state for this file
-            session_key = f"caption_{uploaded_file.name}_{uploaded_file.size}_{caption_mode}_{num_beams}"
+            # Unique session key
+            image_id = getattr(image_source, "size", pil_image.width * pil_image.height)
+            session_key = f"caption_{image_label}_{image_id}_{caption_mode}_{num_beams}"
 
             if generate_btn:
                 with st.spinner("Processing visual features with Vision Transformer..."):
@@ -360,4 +369,4 @@ if uploaded_file is not None:
                 st.text_input("Copy Caption", value=res["caption"], key=f"copy_{session_key}")
 
 else:
-    st.info("Upload an image in JPG, JPEG, PNG, or WEBP format above to begin caption generation.")
+    st.info("Upload an image file or take a photo with your camera above to begin.")

@@ -5,8 +5,7 @@ Provides device detection (Apple Silicon MPS / CUDA / CPU) and image validation 
 
 from typing import Tuple, Optional
 import io
-import torch
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def get_device() -> torch.device:
@@ -42,7 +41,9 @@ def get_device_name(device: torch.device) -> str:
 def validate_and_load_image(image_input) -> Tuple[Optional[Image.Image], Optional[str]]:
     """
     Validates and loads an image from an uploaded file or file path.
-    Converts image to RGB mode to ensure compatibility with Transformer models.
+    - Handles EXIF rotation metadata from mobile camera photos.
+    - Converts image to RGB mode.
+    - Caps excessive phone camera resolutions (e.g. 48MP) to prevent cloud memory overflow.
 
     Args:
         image_input: Streamlit UploadedFile, file-like object, or string file path.
@@ -56,6 +57,12 @@ def validate_and_load_image(image_input) -> Tuple[Optional[Image.Image], Optiona
     try:
         if isinstance(image_input, (str, io.BytesIO)) or hasattr(image_input, "read"):
             image = Image.open(image_input)
+
+            # Auto-rotate phone camera photos according to EXIF orientation tag
+            try:
+                image = ImageOps.exif_transpose(image)
+            except Exception:
+                pass
             
             # Supported standard formats
             supported_formats = {"JPEG", "JPG", "PNG", "WEBP", "BMP", "TIFF", "MPO"}
@@ -65,6 +72,11 @@ def validate_and_load_image(image_input) -> Tuple[Optional[Image.Image], Optiona
             # Convert to RGB (handles RGBA, grayscale, CMYK, etc.)
             if image.mode != "RGB":
                 image = image.convert("RGB")
+            
+            # Downsample ultra-high-resolution mobile photos (max dimension 1920px) to prevent cloud RAM crash
+            max_dimension = 1920
+            if max(image.width, image.height) > max_dimension:
+                image.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
                 
             return image, None
         else:

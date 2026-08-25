@@ -47,8 +47,11 @@ class ImageCaptioner:
         # Load processor (handles image resizing, normalization, and text tokenization)
         self.processor = BlipProcessor.from_pretrained(self.model_name)
         
-        # Load model weights
-        self.model = BlipForConditionalGeneration.from_pretrained(self.model_name)
+        # Load model weights with optimized memory footprint
+        self.model = BlipForConditionalGeneration.from_pretrained(
+            self.model_name,
+            low_cpu_mem_usage=True
+        )
         self.model.to(self.device)
         self.model.eval()  # Set to evaluation mode
         
